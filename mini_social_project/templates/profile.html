@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Trang cá nhân của {{ profile_user.username }} - MiniSocial{% endblock %}
+
+{% block head_extra %}
+<style>
+    .profile-banner { background-color: var(--secondary-color); color:white; padding: 2.5rem 1.5rem; text-align: center; border-radius: var(--border-radius) var(--border-radius) 0 0; margin-top: -1.5rem; background-image: linear-gradient(to right, var(--primary-color), var(--info-color)); }
+    body.dark-mode .profile-banner { background-image: linear-gradient(to right, #222, #444); }
+    .profile-avatar-large { width: 140px; height: 140px; border-radius: 50%; margin: -70px auto 1rem auto; background-color: var(--card-bg); display: flex; align-items: center; justify-content: center; font-size: 3.5em; text-transform: uppercase; border: 5px solid var(--card-bg); box-shadow: var(--box-shadow-lg); position: relative; overflow: hidden; }
+    .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-username { font-size: 2.2em; font-weight: 700; margin-bottom: .5rem; color:var(--body-color); }
+    .profile-info-text { color: var(--secondary-color); white-space: pre-wrap; font-size: 1em; margin-bottom:1.2rem; max-width:500px; margin-left:auto; margin-right:auto;}
+    body.dark-mode .profile-info-text { color: #bbb; }
+    .user-posts-title { font-size: 1.4em; color: var(--body-color); margin-top: 2.5rem; margin-bottom: 1.2rem; font-weight:600; border-bottom: 1px solid var(--hr-color); padding-bottom: .6rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="card profile-details-card" style="padding:0; overflow:hidden;"> {# Bỏ padding của card cha #}
+        <div class="profile-banner">
+            {# Có thể thêm ảnh bìa ở đây sau #}
+        </div>
+        <div style="padding:1.5rem; text-align:center;"> {# Thêm padding lại cho nội dung bên trong #}
+            <div class="profile-avatar-large">
+                 {% if profile_user.avatar %}
+                    <img src="{{ url_for('static', filename='uploads/avatars/' + profile_user.avatar) }}" alt="Avatar của {{ profile_user.username }}">
+                {% else %}
+                    {{ profile_user.username[0]|upper }}
+                {% endif %}
+            </div>
+            <h1 class="profile-username">{{ profile_user.username }}</h1>
+            <p class="profile-info-text">{{ profile_user.profile_info if profile_user.profile_info else "Chưa có thông tin giới thiệu."}}</p>
+            {% if session.logged_in_user_id == profile_user.id %}
+                <a href="{{ url_for('edit_profile') }}">
+                    <button style="background-color: var(--secondary-color); font-size:0.9em; padding: .6rem 1rem;">Chỉnh sửa hồ sơ</button>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <h2 class="user-posts-title">Bài đăng của {{ profile_user.username }}</h2>
+    <div id="postsContainerProfile">
+        {% include '_posts_list.html' with context %} {# Tái sử dụng template danh sách bài đăng #}
+    </div>
+
+    {# Pagination links #}
+    {% if pagination and (pagination.has_prev or pagination.has_next) %}
+    <nav class="pagination">
+        {% if pagination.has_prev %}
+            <a href="{{ url_for('profile', username=profile_user.username, page=pagination.prev_num) }}">&laquo; Mới hơn</a>
+        {% else %}
+            <span class="disabled">&laquo; Mới hơn</span>
+        {% endif %}
+        {# ... (Copy phần lặp trang từ index.html nếu muốn hiển thị đầy đủ) ... #}
+        {% for p_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=1) %}
+             {% if p_num %}
+                {% if pagination.page == p_num %}
+                    <span class="current">{{ p_num }}</span>
+                {% else %}
+                    <a href="{{ url_for('profile', username=profile_user.username, page=p_num) }}">{{ p_num }}</a>
+                {% endif %}
+            {% else %}
+                <span class="disabled">&hellip;</span>
+            {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+            <a href="{{ url_for('profile', username=profile_user.username, page=pagination.next_num) }}">Cũ hơn &raquo;</a>
+        {% else %}
+            <span class="disabled">Cũ hơn &raquo;</span>
+        {% endif %}
+    </nav>
+    {% endif %}
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    // JavaScript cho like, comment tương tự index.html
+    // Nên tách ra file JS chung và import vào base.html
+    const apiUrlBase = "{{ url_for('index', _external=True) }}api";
+
+    // Copy các hàm likePostAPI, toggleCommentForm, submitCommentAPI (và addCommentToDOM, formatPostTimestamp, escapeHTML nếu cần) từ index.html vào đây
+    // Hoặc tốt hơn là tạo file static/js/main.js và link vào base.html
+    async function likePostAPI(postId) { /* ... như index.html ... */ }
+    function toggleCommentForm(postId) { /* ... như index.html ... */ }
+    async function submitCommentAPI(postId) { /* ... như index.html, nhớ gọi addCommentToDOM ... */ }
+    function addCommentToDOM(postId, commentData) { /* ... như index.html ... */ }
+    function formatPostTimestamp(isoString) { /* ... như index.html ... */ }
+    function escapeHTML(str) { /* ... như index.html ... */ }
+
+    // Dán lại các hàm JS từ index.html vào đây
+    // (Phần này giống hệt index.html nên bạn có thể copy)
+    // ...
+</script>
+{% endblock %}

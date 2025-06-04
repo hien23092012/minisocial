@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Đăng Ký - MiniSocial{% endblock %}
+{% block content %}
+<div class="card auth-container" style="max-width: 450px; margin: 50px auto; text-align:center;">
+    <h1 class="page-title" style="text-align:center;">Đăng Ký Tài Khoản</h1>
+    <form method="POST" action="{{ url_for('register') }}">
+        <input type="text" name="username" placeholder="Tên đăng nhập (không dấu cách, không ký tự đặc biệt)" required pattern="^[a-zA-Z0-9_.-]+$" title="Chỉ chữ cái, số, dấu gạch dưới, gạch ngang, dấu chấm.">
+        <input type="password" name="password" placeholder="Mật khẩu (ít nhất 6 ký tự)" required minlength="6">
+        <textarea name="profile_info" rows="3" placeholder="Giới thiệu ngắn về bạn (tùy chọn)"></textarea>
+        <button type="submit" style="width:100%;">Đăng Ký</button>
+    </form>
+    <p style="margin-top: 1.5rem; font-size: 0.9em;">
+        Đã có tài khoản? <a href="{{ url_for('login') }}" style="color:var(--link-color); text-decoration:none; font-weight:500;">Đăng nhập tại đây</a>
+    </p>
+</div>
+{% endblock %}

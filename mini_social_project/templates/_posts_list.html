@@ -1,0 +1,65 @@
+{# Được gọi từ index.html và profile.html #}
+{% for post in posts %}
+<div class="card post" data-id="{{ post.id }}" id="post-{{post.id}}">
+    <div class="post-header">
+            <div class="avatar avatar-sm">
+            {% if post.author.avatar %}
+                <img src="{{ url_for('static', filename='uploads/avatars/' + post.author.avatar) }}" alt="Avatar của {{ post.author.username }}">
+            {% else %}
+                {{ post.author.username[0]|upper }}
+            {% endif %}
+        </div>
+            <div class="post-user-time">
+            <strong><a href="{{ url_for('profile', username=post.author.username) }}">{{ post.author.username }}</a></strong>
+            <span>{{ post.timestamp | format_datetime }}</span>
+        </div>
+    </div>
+
+    {% if post.content %}
+    <div class="post-content">{{ post.content }}</div>
+    {% endif %}
+
+    {% if post.media_url %}
+    <div class="post-media">
+        {% if post.media_type == 'image' %}
+            <img src="{{ url_for('static', filename='uploads/posts_media/' + post.media_url) }}" alt="Nội dung media">
+        {% elif post.media_type == 'video' %}
+            <video src="{{ url_for('static', filename='uploads/posts_media/' + post.media_url) }}" controls></video>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="post-actions">
+        <button onclick="likePostAPI({{ post.id }})">👍 Thích (<span id="likes-{{ post.id }}">{{ post.likes }}</span>)</button>
+        <button onclick="toggleCommentForm({{ post.id }})">💬 Bình luận</button>
+    </div>
+    <div class="comments-section" id="comments-section-{{ post.id }}">
+            {% if post.comments %}
+            {% for comment in post.comments|sort(attribute='timestamp') %}
+            <div class="comment" id="comment-{{comment.id}}">
+                <div class="post-header" style="margin-bottom: 0.3rem;">
+                    <div class="avatar avatar-sm" style="width:30px; height:30px; font-size:0.8em; margin-right:0.5rem;">
+                            {% if comment.commenter.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + comment.commenter.avatar) }}" alt="Avatar của {{ comment.commenter.username }}">
+                        {% else %}
+                            {{ comment.commenter.username[0]|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <strong><a href="{{ url_for('profile', username=comment.commenter.username) }}">{{ comment.commenter.username }}</a></strong>
+                        <span class="comment-timestamp">{{ comment.timestamp | format_datetime }}</span>
+                    </div>
+                </div>
+                {{ comment.text }} {# Giả sử comment text đã an toàn hoặc bạn sẽ escape nó nếu cần #}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-content" id="no-comments-{{post.id}}" style="font-size:0.85em; padding:5px 0;">Chưa có bình luận nào.</p>
+        {% endif %}
+    </div>
+    <div class="comment-form" id="comment-form-{{ post.id }}" style="display:none;">
+        <input type="text" id="commentText-{{ post.id }}" placeholder="Viết bình luận...">
+        <button onclick="submitCommentAPI({{ post.id }})">Gửi</button>
+    </div>
+</div>
+{% endfor %}

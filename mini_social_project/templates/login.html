@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Đăng Nhập - MiniSocial{% endblock %}
+{% block content %}
+<div class="card auth-container" style="max-width: 450px; margin: 50px auto; text-align:center;">
+    <h1 class="page-title" style="text-align:center;">Đăng Nhập</h1>
+    <form method="POST" action="{{ url_for('login') }}">
+        <input type="text" name="username" placeholder="Tên đăng nhập" required autofocus autocomplete="username">
+        <input type="password" name="password" placeholder="Mật khẩu" required autocomplete="current-password">
+        <button type="submit" style="width:100%;">Đăng Nhập</button>
+    </form>
+    <p style="margin-top: 1.5rem; font-size: 0.9em;">
+        Chưa có tài khoản? <a href="{{ url_for('register') }}" style="color:var(--link-color); text-decoration:none; font-weight:500;">Đăng ký ngay</a>
+    </p>
+</div>
+{% endblock %}

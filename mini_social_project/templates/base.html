@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MiniSocial{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            --primary-color: #007bff; /* Xanh dương hiện đại */
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            
+            --border-radius: .3rem;
+            --box-shadow: 0 2px 5px rgba(0,0,0,.08);
+            --box-shadow-lg: 0 .5rem 1.5rem rgba(0,0,0,.1);
+
+            /* Light Theme (default) */
+            --body-bg: #e9ecef; /* Nền xám nhạt hơn */
+            --body-color: #212529;
+            --card-bg: #ffffff;
+            --card-border-color: #dee2e6;
+            --link-color: var(--primary-color);
+            --navbar-bg: #ffffff;
+            --navbar-color: #343a40;
+            --navbar-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            --button-primary-bg: var(--primary-color);
+            --button-primary-color: #fff;
+            --input-bg: #fff;
+            --input-border-color: #ced4da;
+            --input-color: #495057;
+            --placeholder-color: #6c757d;
+            --hr-color: #dee2e6;
+        }
+
+        body.dark-mode {
+            --body-bg: #121212; /* Nền tối hơn */
+            --body-color: #e0e0e0;
+            --card-bg: #1e1e1e; /* Card tối hơn một chút */
+            --card-border-color: #333;
+            --link-color: #6cb2f0; /* Xanh dương sáng hơn cho dark mode */
+            --navbar-bg: #1c1c1c;
+            --navbar-color: #e0e0e0;
+            --navbar-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            --button-primary-bg: #3b82f6;
+            --button-primary-color: #e0e0e0;
+            --input-bg: #2c2c2c;
+            --input-border-color: #444;
+            --input-color: #e0e0e0;
+            --placeholder-color: #888;
+            --hr-color: #333;
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: var(--font-family); margin: 0; padding: 0; background-color: var(--body-bg); color: var(--body-color); line-height: 1.65; font-size:16px; transition: background-color 0.2s, color 0.2s; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .navbar { background-color: var(--navbar-bg); padding: 0.7rem 1.5rem; color: var(--navbar-color); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--navbar-shadow); position:sticky; top:0; z-index:1020; height:60px; }
+        .navbar a { color: var(--navbar-color); text-decoration: none; margin-left: 1.2rem; font-weight: 500; font-size:0.95rem; transition: color 0.2s; }
+        .navbar a:hover { color: var(--link-color); }
+        .navbar .brand { font-size: 1.8em; font-weight: 700; margin-left: 0; color: var(--primary-color); letter-spacing: -0.5px; }
+        body.dark-mode .navbar .brand {color: var(--link-color);}
+        .container { max-width: 760px; margin: auto; padding: 0 15px; }
+        
+        .alert { padding: .9rem 1.1rem; margin: 1.2rem 0; border-radius: var(--border-radius); color: #fff; text-align: center; font-size: 0.9rem; border: 1px solid transparent;}
+        .alert-danger { background-color: var(--danger-color); border-color: darken(var(--danger-color), 10%); }
+        .alert-success { background-color: var(--success-color); border-color: darken(var(--success-color), 10%); }
+        .alert-info { background-color: var(--info-color); color:#000; border-color: darken(var(--info-color), 10%);}
+        .alert-warning { background-color: var(--warning-color); color:#000; border-color: darken(var(--warning-color), 10%);}
+        
+        .card { background-color: var(--card-bg); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--box-shadow); margin-bottom: 1.8rem; border: 1px solid var(--card-border-color); }
+        textarea, input[type="text"], input[type="password"] { width: 100%; padding: .7rem 1rem; margin-bottom: .9rem; border: 1px solid var(--input-border-color); border-radius: var(--border-radius); font-size: 1rem; box-sizing: border-box; background-color:var(--input-bg); color:var(--input-color); transition: border-color 0.2s, box-shadow 0.2s;}
+        textarea:focus, input[type="text"]:focus, input[type="password"]:focus { border-color: var(--primary-color); box-shadow: 0 0 0 .2rem rgba(var(--primary-color_rgb, 13, 110, 253), .25); outline:none;}
+        input[type="file"] { padding: .5rem .9rem; font-size:0.9rem; }
+        input::placeholder, textarea::placeholder { color: var(--placeholder-color); opacity: 1; }
+        button, input[type="submit"] { background-color: var(--button-primary-bg); color: var(--button-primary-color); padding: .7rem 1.3rem; border: none; border-radius: var(--border-radius); font-size: 1rem; font-weight: 500; cursor: pointer; display: inline-block; transition: background-color 0.15s, transform 0.1s; text-align:center;}
+        button:hover, input[type="submit"]:hover { filter: brightness(0.92); }
+        button:active, input[type="submit"]:active { transform: translateY(1px); }
+        
+        .post-header { display: flex; align-items: center; margin-bottom: .9rem; }
+        .avatar { border-radius: 50%; background-color: var(--secondary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; text-transform: uppercase; overflow: hidden; border: 2px solid var(--card-bg); }
+        .avatar-sm { width: 40px; height: 40px; font-size:1rem; margin-right: .9rem; }
+        .avatar-md { width: 50px; height: 50px; font-size:1.3rem; margin-right: 1rem; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .post-user-time strong { font-weight: 600; font-size:1.05rem; } .post-user-time strong a {color: var(--body-color); text-decoration:none;} .post-user-time strong a:hover {text-decoration:underline; color: var(--link-color);}
+        .post-user-time span { font-size: 0.8em; color: var(--secondary-color); display: block; margin-top:2px;}
+        body.dark-mode .post-user-time span { color: #999; }
+        .post-content { margin-bottom: 1.2rem; font-size: 1rem; line-height: 1.7; white-space: pre-wrap; word-wrap: break-word; }
+        .post-media { margin-bottom:1rem; text-align:center; }
+        .post-media img, .post-media video { max-width: 100%; height: auto; max-height:500px; border-radius: var(--border-radius); border: 1px solid var(--card-border-color); }
+        .post-actions { display: flex; justify-content: space-around; border-top: 1px solid var(--hr-color); padding-top: .9rem; margin-top: .9rem; }
+        .post-actions button { background: none; border: none; color: var(--secondary-color); font-size: 0.9rem; font-weight: 500; padding: 0.5rem; border-radius:var(--border-radius); width:100%;}
+        body.dark-mode .post-actions button {color: #bbb;}
+        .post-actions button:hover { background-color: rgba(0,0,0,0.04); }
+        body.dark-mode .post-actions button:hover { background-color: rgba(255,255,255,0.06); }
+        .comments-section { margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid var(--hr-color); }
+        .comment { margin-bottom: .8rem; padding: .7rem 1rem; background-color: var(--body-bg); border-radius: .8rem; font-size: 0.9rem; }
+        .comment strong { font-weight: 600; } .comment strong a {color: var(--body-color); text-decoration:none;} .comment strong a:hover {text-decoration:underline; color:var(--link-color);}
+        .comment-timestamp { font-size:0.75em; color:var(--secondary-color); margin-left: 0.5rem;}
+        .comment-form { display: flex; margin-top: .9rem; align-items:center;}
+        .comment-form input[type="text"] { flex-grow: 1; margin-right: .6rem; border-radius: 1rem; }
+        .comment-form button { border-radius: 1rem; font-size: 0.9em; padding: .5rem 1rem; }
+        .no-content { text-align: center; color: var(--secondary-color); padding: 1.8rem 0; font-style:italic; }
+        .feed-title, .page-title {font-size: 1.6em; font-weight: 600; margin-bottom: 1.2rem; color:var(--body-color);}
+        hr { border:0; border-top: 1px solid var(--hr-color); margin: 1.5rem 0;}
+
+        #live-clock { font-size: 0.9em; margin-left: auto; padding-left: 1rem; color: var(--navbar-color); }
+        .navbar-right-items { display: flex; align-items: center; }
+        .file-input-wrapper { margin-bottom: 1rem; }
+        .file-input-wrapper label { font-size:0.9rem; font-weight:500; display:block; margin-bottom:0.3rem;}
+        #mediaPreview { margin-top: 10px; max-width: 100%; max-height: 200px; }
+        #mediaPreview img, #mediaPreview video { max-width: 100%; max-height: 200px; border-radius: var(--border-radius); }
+
+        /* Pagination */
+        .pagination { margin: 2rem 0; text-align: center; }
+        .pagination a, .pagination span { display: inline-block; padding: .5rem .9rem; margin: 0 .2rem; border: 1px solid var(--card-border-color); border-radius: var(--border-radius); color: var(--link-color); text-decoration: none; }
+        .pagination a:hover { background-color: rgba(0,0,0,0.05); }
+        body.dark-mode .pagination a:hover { background-color: rgba(255,255,255,0.08); }
+        .pagination .current { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        body.dark-mode .pagination .current { background-color: var(--link-color); }
+        .pagination .disabled { color: var(--secondary-color); pointer-events: none; opacity: 0.6; }
+
+    </style>
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="{{ session.user_theme if session.user_theme else 'light' }}-mode">
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="brand">MiniSocial</a>
+        <div class="navbar-right-items">
+            <div id="live-clock"></div>
+            {% if session.logged_in_user_id %}
+                <a href="{{ url_for('profile', username=session.username) }}">
+                    <div class="avatar avatar-sm" style="width:30px; height:30px; font-size:0.8em; margin-left:1rem; display:inline-flex; vertical-align:middle;">
+                        {% if g.current_user_avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + g.current_user_avatar) }}" alt="Avatar">
+                        {% else %}
+                            {{ session.username[0]|upper if session.username else 'U' }}
+                        {% endif %}
+                    </div>
+                    <span style="margin-left:0.5rem; vertical-align:middle;">{{ session.username }}</span>
+                </a>
+                <a href="{{ url_for('edit_profile') }}">Sửa hồ sơ</a>
+                <a href="{{ url_for('logout') }}">Đăng Xuất</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Đăng Nhập</a>
+                <a href="{{ url_for('register') }}">Đăng Ký</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+    
+    <footer>
+        <p style="text-align:center; font-size:0.85em; color:var(--secondary-color); margin-top:3rem; margin-bottom:1.5rem;">
+            MiniSocial &copy; {{ now.year if now else 2025 }}.
+        </p>
+    </footer>
+
+    <script>
+        // Global variable for logged-in user's avatar for dynamic comment rendering
+        const currentUserAvatarUrl = "{{ url_for('static', filename='uploads/avatars/' + g.current_user_avatar) if g.current_user_avatar else '' }}";
+        const currentUsername = "{{ session.username }}";
+
+        function updateClock() {
+            const clockElement = document.getElementById('live-clock');
+            if (clockElement) {
+                const now = new Date();
+                clockElement.textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            }
+        }
+        setInterval(updateClock, 1000 * 30); // Cập nhật mỗi 30 giây
+        updateClock();
+
+        // Thêm g.current_user_avatar vào context cho tất cả template
+        // Trong app.py:
+        // from flask import g
+        // @app.before_request
+        // def load_logged_in_user_avatar():
+        //     user_id = session.get('logged_in_user_id')
+        //     g.current_user_avatar = None
+        //     if user_id:
+        //         user = User.query.get(user_id)
+        //         if user:
+        //             g.current_user_avatar = user.avatar
+        // @app.context_processor
+        // def inject_now():
+        //    return {'now': datetime.datetime.utcnow()}
+    </script>
+    {% block scripts_extra %}{% endblock %}
+</body>
+</html>
