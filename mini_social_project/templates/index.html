@@ -1,1 +1,300 @@
+{% extends "base.html" %}
 
+{% block title %}Trang Chủ - MiniSocial{% endblock %}
+
+{% block content %}
+    {% if session.logged_in_user_id %}
+    <div class="card post-creation-area">
+        <h3 style="margin-top:0; margin-bottom:1rem;">Tạo bài đăng mới</h3>
+        {# Thay đổi form để gửi file #}
+        <form id="createPostForm" enctype="multipart/form-data">
+            <textarea name="content" id="postContent" rows="3" placeholder="Bạn đang nghĩ gì, {{ session.username }}?"></textarea>
+            <div class="file-input-wrapper">
+                <label for="mediaFile">Thêm ảnh/video (tối đa 25MB):</label>
+                <input type="file" name="mediaFile" id="mediaFile" accept="image/*,video/*" onchange="previewMedia(event)">
+            </div>
+            <div id="mediaPreview" style="margin-bottom:1rem;"></div>
+            <button type="button" onclick="submitPostWithMedia()">Đăng bài</button> {# Đổi thành type="button" #}
+        </form>
+    </div>
+
+    <h2 class="feed-title">Bài đăng mới nhất</h2>
+    <div id="postsContainer"> {# Bài đăng sẽ được chèn vào đây #}
+        {% include '_posts_list.html' with context %} {# Tách phần lặp bài đăng ra file riêng #}
+    </div>
+    
+    {# Pagination links #}
+    {% if pagination and (pagination.has_prev or pagination.has_next) %}
+    <nav class="pagination">
+        {% if pagination.has_prev %}
+            <a href="{{ url_for('index', page=pagination.prev_num) }}">&laquo; Mới hơn</a>
+        {% else %}
+            <span class="disabled">&laquo; Mới hơn</span>
+        {% endif %}
+
+        {% for p_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p_num %}
+                {% if pagination.page == p_num %}
+                    <span class="current">{{ p_num }}</span>
+                {% else %}
+                    <a href="{{ url_for('index', page=p_num) }}">{{ p_num }}</a>
+                {% endif %}
+            {% else %}
+                <span class="disabled">&hellip;</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+            <a href="{{ url_for('index', page=pagination.next_num) }}">Cũ hơn &raquo;</a>
+        {% else %}
+            <span class="disabled">Cũ hơn &raquo;</span>
+        {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="card" style="text-align:center; padding: 2.5rem;">
+        <h2 class="page-title">Chào mừng đến với MiniSocial!</h2>
+        <p style="margin-bottom:1.5rem;">Nơi chia sẻ mọi khoảnh khắc.</p>
+        <a href="{{ url_for('login') }}"><button>Đăng nhập</button></a>
+        <a href="{{ url_for('register') }}" style="margin-left:1rem;"><button style="background-color:var(--secondary-color);">Đăng ký</button></a>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts_extra %}
+{% if session.logged_in_user_id %}
+<script>
+    const apiUrlBase = "{{ url_for('index', _external=True) }}api"; // _external=True không cần thiết nếu API cùng domain
+    let latestPostTimestamp = null; // Lưu timestamp của bài mới nhất đã hiển thị
+
+    function previewMedia(event) {
+        const preview = document.getElementById('mediaPreview');
+        preview.innerHTML = ''; // Xóa preview cũ
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    preview.appendChild(img);
+                } else if (file.type.startsWith('video/')) {
+                    const video = document.createElement('video');
+                    video.src = e.target.result;
+                    video.controls = true;
+                    preview.appendChild(video);
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async function submitPostWithMedia() {
+        const form = document.getElementById('createPostForm');
+        const formData = new FormData(form);
+        // const content = document.getElementById('postContent').value;
+        // const mediaFile = document.getElementById('mediaFile').files[0];
+        // if (!content.trim() && !mediaFile) {
+        //     alert('Bài đăng phải có nội dung hoặc file đa phương tiện!');
+        //     return;
+        // }
+        try {
+            const response = await fetch(`${apiUrlBase}/posts`, {
+                method: 'POST',
+                body: formData, // Gửi FormData, không cần set Content-Type header
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({error: "Lỗi không xác định từ server"}));
+                throw new Error(errorData.error || `Lỗi ${response.status}: Không thể tạo bài đăng.`);
+            }
+            const newPostData = await response.json();
+            prependPostToDOM(newPostData); // Thêm bài mới lên đầu
+            form.reset(); // Reset form
+            document.getElementById('mediaPreview').innerHTML = ''; // Xóa preview
+            if (!latestPostTimestamp || newPostData.timestamp > latestPostTimestamp) {
+                latestPostTimestamp = newPostData.timestamp;
+            }
+        } catch (error) {
+            console.error("Lỗi tạo bài đăng:", error);
+            alert(error.message);
+        }
+    }
+
+    function formatPostTimestamp(isoString) {
+        if (!isoString) return '';
+        const date = new Date(isoString); // JS Date tự hiểu ISO string có Z là UTC
+        return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' lúc ' +
+               date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    function createPostElement(postData) {
+        const postDiv = document.createElement('div');
+        postDiv.className = 'card post';
+        postDiv.dataset.id = postData.id;
+        postDiv.id = `post-${postData.id}`; // Thêm ID cho post element
+
+        let mediaHTML = '';
+        if (postData.media_url) {
+            const mediaPath = `{{ url_for('static', filename='uploads/posts_media/') }}${postData.media_url}`;
+            if (postData.media_type === 'image') {
+                mediaHTML = `<div class="post-media"><img src="${mediaPath}" alt="Nội dung media"></div>`;
+            } else if (postData.media_type === 'video') {
+                mediaHTML = `<div class="post-media"><video src="${mediaPath}" controls></video></div>`;
+            }
+        }
+        
+        const authorAvatarUrl = postData.avatar ? `{{ url_for('static', filename='uploads/avatars/') }}${postData.avatar}` : '';
+        const authorAvatarInitial = postData.user ? postData.user[0].toUpperCase() : 'U';
+
+        postDiv.innerHTML = `
+            <div class="post-header">
+                <div class="avatar avatar-sm">
+                    ${postData.avatar ? `<img src="${authorAvatarUrl}" alt="Avatar">` : authorAvatarInitial}
+                </div>
+                <div class="post-user-time">
+                    <strong><a href="/profile/${postData.user}">${postData.user}</a></strong>
+                    <span>${formatPostTimestamp(postData.timestamp)}</span>
+                </div>
+            </div>
+            ${postData.content ? `<div class="post-content">${escapeHTML(postData.content)}</div>` : ''}
+            ${mediaHTML}
+            <div class="post-actions">
+                <button onclick="likePostAPI(${postData.id})">👍 Thích (<span id="likes-${postData.id}">${postData.likes}</span>)</button>
+                <button onclick="toggleCommentForm(${postData.id})">💬 Bình luận</button>
+            </div>
+            <div class="comments-section" id="comments-section-${postData.id}">
+                <p class="no-content" id="no-comments-${postData.id}" style="font-size:0.85em; padding:5px 0;">Chưa có bình luận nào.</p>
+            </div>
+            <div class="comment-form" id="comment-form-${postData.id}" style="display:none;">
+                <input type="text" id="commentText-${postData.id}" placeholder="Viết bình luận...">
+                <button onclick="submitCommentAPI(${postData.id})">Gửi</button>
+            </div>
+        `;
+        return postDiv;
+    }
+
+    function prependPostToDOM(postData) {
+        const postsContainer = document.getElementById('postsContainer');
+        const noPostsMessage = postsContainer.querySelector('.no-content');
+        if (noPostsMessage) {
+            noPostsMessage.remove(); // Xóa thông báo "Chưa có bài đăng nào"
+        }
+        const postElement = createPostElement(postData);
+        postsContainer.prepend(postElement); // Thêm lên đầu
+    }
+    
+    function escapeHTML(str) { // Cần hàm này nếu content có thể chứa HTML
+        if (str === null || str === undefined) return '';
+        return str.replace(/[&<>"']/g, function (match) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[match];
+        });
+    }
+
+    async function fetchNewPosts() {
+        try {
+            let url = `${apiUrlBase}/latest`;
+            if (latestPostTimestamp) {
+                url += `?since=${latestPostTimestamp}`;
+            }
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error("Lỗi fetch bài đăng mới:", response.status);
+                return;
+            }
+            const newPosts = await response.json();
+            if (newPosts && newPosts.length > 0) {
+                newPosts.forEach(post => {
+                    // Kiểm tra xem bài đăng đã có trên trang chưa để tránh trùng lặp (quan trọng)
+                    if (!document.getElementById(`post-${post.id}`)) {
+                        prependPostToDOM(post);
+                    }
+                });
+                // Cập nhật timestamp của bài mới nhất
+                latestPostTimestamp = newPosts[0].timestamp; // Giả sử API trả về sắp xếp mới nhất trước
+            }
+        } catch (error) {
+            console.error("Lỗi fetch bài đăng mới:", error);
+        }
+    }
+    
+    // Lấy timestamp của bài đăng mới nhất hiện có trên trang (nếu có)
+    function initializeLatestTimestamp() {
+        const firstPost = document.querySelector('#postsContainer .post');
+        if (firstPost) {
+            // Giả sử timestamp được lưu trong một data-attribute hoặc có thể lấy từ text
+            // Trong ví dụ này, chúng ta sẽ để `latestPostTimestamp` là null ban đầu,
+            // và API sẽ trả về các bài đăng mới nhất.
+            // Để tối ưu hơn, bạn có thể gửi timestamp của bài đăng đầu tiên hiện tại lên server.
+        }
+    }
+
+    // Các hàm likePostAPI, toggleCommentForm, submitCommentAPI giữ nguyên như file `index.html` trước đó
+    // nhưng cần điều chỉnh để cập nhật DOM hoặc gọi lại fetchNewPosts/reload.
+    // Ví dụ submitCommentAPI sau khi thành công:
+    // async function submitCommentAPI(postId) { ... try { ... const newCommentData = await response.json(); addCommentToDOM(postId, newCommentData); ... } ... }
+    // Để đơn giản, reload vẫn được chấp nhận cho phiên bản này.
+    // Các hàm này đã được định nghĩa lại trong các file trước, có thể copy qua.
+    // (Giữ lại các hàm đã có trong phiên bản trước)
+    async function likePostAPI(postId) { /* ... như cũ ... */ }
+    function toggleCommentForm(postId) { /* ... như cũ ... */ }
+    async function submitCommentAPI(postId) { /* ... như cũ, nhưng sau khi thành công có thể gọi hàm render comment mới thay vì reload ... */ 
+        const commentTextInput = document.getElementById(`commentText-${postId}`);
+        if (!commentTextInput) return;
+        const commentContent = commentTextInput.value.trim();
+
+        if (!commentContent) { alert('Nội dung bình luận không được để trống!'); return; }
+        try {
+            const response = await fetch(`${apiUrlBase}/posts/${postId}/comment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ comment_content: commentContent }),
+            });
+            if (!response.ok) throw new Error(`Lỗi ${response.status}: Không thể bình luận.`);
+            const newCommentData = await response.json();
+            addCommentToDOM(postId, newCommentData); // Gọi hàm này
+            commentTextInput.value = '';
+            // toggleCommentForm(postId); // Optionally hide form
+        } catch (error) {
+            console.error("Lỗi bình luận:", error);
+            alert(error.message);
+        }
+    }
+
+    function addCommentToDOM(postId, commentData) {
+       const commentsSection = document.getElementById(`comments-section-${postId}`);
+       const noCommentsEl = document.getElementById(`no-comments-${postId}`);
+       if(noCommentsEl) noCommentsEl.style.display = 'none'; // Ẩn thông báo "chưa có bình luận"
+   
+       const commentDiv = document.createElement('div');
+       commentDiv.className = 'comment';
+       commentDiv.id = `comment-${commentData.id}`;
+       
+       const commenterAvatarUrl = commentData.avatar ? `{{ url_for('static', filename='uploads/avatars/') }}${commentData.avatar}` : (currentUserAvatarUrl && commentData.user === currentUsername ? currentUserAvatarUrl : '');
+       const commenterAvatarInitial = commentData.user ? commentData.user[0].toUpperCase() : 'U';
+
+       commentDiv.innerHTML = `
+           <div class="post-header" style="margin-bottom: 0.3rem;">
+               <div class="avatar avatar-sm" style="width:30px; height:30px; font-size:0.8em; margin-right:0.5rem;">
+                   ${commenterAvatarUrl ? `<img src="${commenterAvatarUrl}" alt="Avatar">` : commenterAvatarInitial}
+               </div>
+               <div>
+                   <strong><a href="/profile/${escapeHTML(commentData.user)}">${escapeHTML(commentData.user)}</a></strong>
+                   <span class="comment-timestamp">${formatPostTimestamp(commentData.timestamp)}</span>
+               </div>
+           </div>
+           ${escapeHTML(commentData.text)}
+       `;
+       commentsSection.appendChild(commentDiv); // Thêm bình luận mới vào cuối
+    }
+
+
+    // Khởi chạy auto-refresh và các thiết lập ban đầu
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeLatestTimestamp();
+        setInterval(fetchNewPosts, 30000); // 30 giây một lần
+    });
+
+</script>
+{% endif %}
+{% endblock %}
