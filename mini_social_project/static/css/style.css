@@ -1,1 +1,25 @@
-
+/* static/css/style.css */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5;
+    color: #1c1e21;
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+}
+.container {
+    width: 100%;
+    max-width: 600px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+/* ... (toàn bộ CSS còn lại từ thẻ <style> trong index.html) ... */
+.no-posts {
+    text-align: center;
+    color: #65676b;
+    padding: 20px;
+}
